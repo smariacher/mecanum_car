@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "clock_config.h": "c"
+    }
+}
