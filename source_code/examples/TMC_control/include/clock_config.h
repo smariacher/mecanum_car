@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define F_CLK 16000000
+#define F_CLK 8000000
 
 void configure_clock();
 
