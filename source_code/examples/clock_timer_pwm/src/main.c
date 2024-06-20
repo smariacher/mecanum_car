@@ -53,42 +53,24 @@ int main(){
     TIM3->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
     
     uint8_t state = 0;
-    uint16_t lower_limit = 1000; // One rotation per minute because of step/8 microstepping
-    uint16_t upper_limit = 50;
-    uint16_t pwm_frequency = lower_limit;
-    uint16_t duty = arr_from_freq(lower_limit)/2;
-
-    uint8_t level = 10;
+    uint16_t pwm_frequency = 1000;
+    uint16_t duty = 0;
 
     for(;;){
-        // if (state == 0){
-        //     if (pwm_frequency <= upper_limit){
-        //         pwm_frequency += 1;
-        //     } else {
-        //         state = 1;
-        //     }
-        // } else if (state == 1){
-        //     if (pwm_frequency >= lower_limit){
-        //         pwm_frequency -= 1;
-        //     } else {
-        //         state = 0;
-        //     }
-        // }
         
-        if (!state){
-            level -= 1;
-            if (level <= 1){state = 1;}
+        if (state == 0){
+            duty += 1;
+            if (duty >= arr_from_freq(pwm_frequency)){state = 1;}
         }
 
-        if (state){
-            level += 1;
-            if (level >= arr_from_freq(pwm_frequency)){state = 0;}
+        if (state == 1){
+            duty -= 1;
+            if (duty <= 1){state = 0;}
         }
-
+        
         TIM3->ARR = arr_from_freq(pwm_frequency);
-        duty = level;
-        TIM3->CCR2 = duty*10;
-        delay(500);
+        TIM3->CCR2 = duty;
+        delay(10);
     }
 
     return 0;
