@@ -13,6 +13,7 @@ uint16_t arr_from_freq(uint16_t freq){
 }
 
 void gpio_alt(GPIO_TypeDef *port, uint32_t pin, uint8_t alt_fn){
+    port->MODER &= ~(0b11 << (pin * 2));
     port->MODER |= (0b10 << (pin*2));
 
     int pos = pin*4;
@@ -22,15 +23,24 @@ void gpio_alt(GPIO_TypeDef *port, uint32_t pin, uint8_t alt_fn){
         idx = 1;
     }
 
+    port->AFR[idx] &= ~(0b1111 << pos); 
     port->AFR[idx] |= (alt_fn << pos);
 }
 
 int main(){
     configure_clock();
 
-    // Enable GPIOB port 5 and set to alt func 2
+    // enable GPIOD pin 2 as EN pin
+    uint8_t en_pin = 2;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+    GPIOD->MODER = GPIO_MODER_MODER0_0 << (2*en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
+
+    // Enable GPIOB port 4 and set to alt func 2
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
-    gpio_alt(GPIOB, 5, 2);
+    gpio_alt(GPIOB, 4, 2);
 
     // Enable TIM3 peripherals
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
@@ -39,29 +49,32 @@ int main(){
     TIM3->CR1 |= TIM_CR1_ARPE;
 
     // Set the prescaler and overflow values
-    TIM3->PSC = 0;
-    TIM3->ARR = 64000;
-    TIM3->CCR2 = 0;
+    TIM3->PSC = 3;
+    TIM3->ARR = 64000-1;
+    TIM3->CCR1 = 0; //CCRx for channel
 
-    // Enable preload for channel 2
-    TIM3->CCMR1 |= (TIM_CCMR1_OC2PE | (0b110 << TIM_CCMR1_OC2M_Pos));
+    // Enable preload for channel 1 (both registers)
+    TIM3->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
 
-    // Enable Capture Compare for channel 2
-    TIM3->CCER |= TIM_CCER_CC2E;
+    // Enable Capture Compare for channel 1
+    TIM3->CCER |= TIM_CCER_CC1E;
 
     // Enable the timer and set to center-aligned mode
     TIM3->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
     
     uint16_t lower_limit = 100;
-    uint16_t upper_limit = 400;
+    uint16_t upper_limit = 4000;
     uint16_t pwm_frequency = lower_limit;
     uint16_t duty = arr_from_freq(lower_limit)/2;
     uint8_t state = 0;
 
+    // delay(100000);
+    // GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
+    
     for(;;){
         if (pwm_frequency <= upper_limit && state == 0){
             pwm_frequency += 1;  
-        } else {state = 0;}
+        } else {state = 1;}
 
         if (pwm_frequency >= lower_limit && state == 1){
             pwm_frequency -= 1;
@@ -69,9 +82,9 @@ int main(){
         
         TIM3->ARR = arr_from_freq(pwm_frequency);
         duty = arr_from_freq(pwm_frequency)/2;
-        TIM3->CCR2 = duty;
+        TIM3->CCR1 = duty;
         
-        delay(200);
+        delay(500);
     }
 
     return 0;

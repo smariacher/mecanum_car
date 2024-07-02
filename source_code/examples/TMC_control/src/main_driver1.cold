@@ -1,0 +1,97 @@
+#include "main.h"
+#include "clock_config.h"
+
+int delay(uint32_t time){
+    for (uint32_t i = 0; i < time; i++){
+        asm("nop");
+    }
+    return 0;
+}
+
+uint16_t arr_from_freq(uint16_t freq){
+    return F_CLK/(freq*(TIM1->PSC+1)) - 1;
+}
+
+void gpio_alt(GPIO_TypeDef *port, uint32_t pin, uint8_t alt_fn){
+    port->MODER &= ~(0b11 << (pin * 2));
+    port->MODER |= (0b10 << (pin*2));
+
+    int pos = pin*4;
+    uint8_t idx = 0;
+    if (pin > 7){
+        pos -= 32;
+        idx = 1;
+    }
+
+    port->AFR[idx] &= ~(0b1111 << pos); 
+    port->AFR[idx] |= (alt_fn << pos);
+}
+
+int main(){
+    configure_clock();
+
+    // enable GPIOD pin 2 as EN pin
+    uint8_t en_pin = 0;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+    GPIOD->MODER = GPIO_MODER_MODER0_0 << (2*en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
+
+    // Enable GPIOA port 0 and set to alt func 2
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    gpio_alt(GPIOA, 8, 1);
+    GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR8_1;
+    GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD8_Msk;
+
+    // Enable TIM1 peripherals
+    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+
+    // Buffer the ARR register
+    TIM1->CR1 |= TIM_CR1_ARPE;
+    TIM1->CR2 = 0;
+
+    // Set the prescaler and overflow values
+    TIM1->PSC = 3;
+    TIM1->ARR = 64000-1;
+    TIM1->CCR1 = 0; //CCRx for channel
+
+    // Enable preload for channel 1 (both registers)
+    TIM1->CCMR1 &= ~TIM_CCMR1_OC1M_Msk;
+    TIM1->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
+
+    // Enable Capture Compare for channel 1
+    TIM1->CCER |= TIM_CCER_CC1E;
+
+    // Enable the timer and set to center-aligned mode
+    TIM1->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
+    
+    uint32_t lower_limit = 100;
+    uint32_t upper_limit = 4000;
+    uint32_t pwm_frequency = lower_limit;
+    uint32_t duty = arr_from_freq(lower_limit)/2;
+    uint8_t state = 0;
+
+    // delay(100000);
+    // GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
+
+    TIM1->BDTR |= TIM_BDTR_MOE;
+    
+    for(;;){
+        if (pwm_frequency <= upper_limit && state == 0){
+            pwm_frequency += 1;  
+        } else {state = 1;}
+
+        if (pwm_frequency >= lower_limit && state == 1){
+            pwm_frequency -= 1;
+        } else {state = 0;}
+        
+        TIM1->ARR = arr_from_freq(pwm_frequency);
+        duty = arr_from_freq(pwm_frequency)/2;
+        TIM1->CCR1 = duty;
+        
+        delay(500);
+    }
+
+    return 0;
+}
