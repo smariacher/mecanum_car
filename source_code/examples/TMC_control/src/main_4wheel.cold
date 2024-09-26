@@ -7,7 +7,6 @@ typedef struct {
     
     uint8_t dir_pin_number;
     GPIO_TypeDef *dir_pin_port;
-    uint8_t set_direction;
 
     TIM_TypeDef *timer;
 
@@ -41,53 +40,30 @@ void gpio_alt(GPIO_TypeDef *port, uint32_t pin, uint8_t alt_fn){
     port->AFR[idx] |= (alt_fn << pos);
 }
 
-void init_enable_pin(GPIO_TypeDef en_port, uint8_t en_pin){
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2 * en_pin);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BS0 << en_pin;
-}
-
-tmc_controller driver1;
-tmc_controller driver2;
-tmc_controller driver3;
-tmc_controller driver4;
-
 int main(){
     configure_clock();
 
-    driver1.en_pin_number = 0;
-    driver1.en_pin_port = GPIOD;
-    driver1.dir_pin_number = 8;
-    driver1.dir_pin_port = GPIOD;
-
-    driver2.en_pin_number = 1;
-    driver2.en_pin_port = GPIOD;
-    driver2.dir_pin_number = 9;
-    driver2.dir_pin_port = GPIOD;
-
-    driver3.en_pin_number = 2;
-    driver3.en_pin_port = GPIOD;
-    driver3.dir_pin_number = 10;
-    driver3.dir_pin_port = GPIOD;
-
-    driver4.en_pin_number = 3;
-    driver4.en_pin_port = GPIOD;
-    driver4.dir_pin_number = 11;
-    driver4.dir_pin_port = GPIOD;
-
-    tmc_controller drivers[4] = {driver1, driver2, driver3, driver4};
-
+    // Enable GPIOD pin 1 as EN pin
+    uint8_t en_pin = 3;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2 * en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
 
-    for (int i = 0; i < 4; i++){
-        init_enable_pin(*drivers[i].en_pin_port, drivers[i].en_pin_number);
-    }
+    en_pin = 2;
+    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2*en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
 
-    delay(1000000);
-    for (int i = 0; i < 4; i++){
+    en_pin = 0;
+    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2*en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
 
-        drivers[i].en_pin_port->BSRR |= GPIO_BSRR_BR0 << drivers[i].en_pin_number;
-    }
+    en_pin = 1;
+    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2*en_pin);
+    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
+    GPIOD->BSRR |= GPIO_BSRR_BR0 << en_pin;
 
     // Set direction pins accordingly
     uint8_t dir_pin = 8;
@@ -216,7 +192,7 @@ int main(){
     TIM9->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 
     uint16_t lower_limit = 100;
-    uint16_t upper_limit = 20000;
+    uint16_t upper_limit = 8000;
     uint16_t pwm_frequency_3 = lower_limit;
     uint16_t pwm_frequency_4 = lower_limit;
     uint16_t pwm_frequency_1 = lower_limit;
@@ -230,7 +206,7 @@ int main(){
     //only for TIM1
     TIM1->BDTR |= TIM_BDTR_MOE;
 
-    uint8_t acc = 8;
+    uint8_t acc = 10;
 
     for(;;){
         if (pwm_frequency_3 <= upper_limit && state == 0){
