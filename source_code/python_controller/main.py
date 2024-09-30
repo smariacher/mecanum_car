@@ -1,5 +1,17 @@
 import pygame as pg
 import sys
+import serial
+import time
+
+ser = serial.Serial('COM9',
+                     9600,
+                     bytesize=serial.EIGHTBITS,
+                     stopbits=serial.STOPBITS_ONE,
+                     parity=serial.PARITY_NONE,
+                     xonxoff=True,
+                     timeout=1
+                    )
+time.sleep(2)
 
 # Initialize pg
 pg.init()
@@ -90,8 +102,8 @@ def draw_speed_arrows(offset_x, offset_y, wheel_speed):
 
 def get_wheel_speeds(joystick):
     speeds = [0,0,0,0]
-    x = joystick.get_axis(0)*255
-    y = joystick.get_axis(1)*255
+    x = -joystick.get_axis(0)*255
+    y = -joystick.get_axis(1)*255
 
     clamp = 20
 
@@ -101,8 +113,8 @@ def get_wheel_speeds(joystick):
         y = 0
 
 
-    speeds[0] = y + x
-    speeds[1] = y - x
+    speeds[0] = y - x
+    speeds[1] = y + x
     speeds[2] = y + x
     speeds[3] = y - x
 
@@ -131,13 +143,22 @@ try:
 
         # Draw the joystick axes
         # draw_axes(screen, joystick)
-        draw_wheels(wheel_width, wheel_height, offset)
         wheel_speeds = get_wheel_speeds(joystick)
-        draw_speed_arrows(offset + (wheel_width/2), offset + (wheel_height/2), wheel_speeds)
-        draw_direction(joystick)
+        # draw_wheels(wheel_width, wheel_height, offset)
+        # draw_speed_arrows(offset + (wheel_width/2), offset + (wheel_height/2), wheel_speeds)
+        # draw_direction(joystick)
         
-        # Update the display
-        pg.display.flip()
+        # # Update the display
+        # pg.display.flip()
+        multiplier = 10
+        send_speed1 = int(wheel_speeds[0]*multiplier)
+        send_speed2 = int(wheel_speeds[1]*multiplier)
+        send_speed3 = int(wheel_speeds[2]*multiplier)
+        send_speed4 = int(wheel_speeds[3]*multiplier)
+
+        ser.write(f'{send_speed1:05}{send_speed2:05}{send_speed3:05}{send_speed4:05}\r'.encode())
+        print(f"{send_speed1:05}{send_speed2:05}{send_speed3:05}{send_speed4:05}")
+        time.sleep(.1)
 
 except KeyboardInterrupt:
     print("\nExiting...")
