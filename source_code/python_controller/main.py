@@ -102,7 +102,7 @@ def draw_speed_arrows(offset_x, offset_y, wheel_speed):
 
 def get_wheel_speeds(joystick):
     speeds = [0,0,0,0]
-    x = -joystick.get_axis(0)*255
+    x = -joystick.get_axis(0)*255 * 0.5
     y = -joystick.get_axis(1)*255
 
     clamp = 20
@@ -150,7 +150,7 @@ try:
         
         # # Update the display
         # pg.display.flip()
-        multiplier = 10
+        multiplier = 30
         send_speed1 = int(wheel_speeds[0]*multiplier)
         send_speed2 = int(wheel_speeds[1]*multiplier)
         send_speed3 = int(wheel_speeds[2]*multiplier)
@@ -161,8 +161,10 @@ try:
         time.sleep(.1)
 
 except KeyboardInterrupt:
+    ser.write(f'00000000000000000000\r'.encode())
     print("\nExiting...")
 
 finally:
     # Quit pg
+    ser.write(f'00000000000000000000\r'.encode())
     pg.quit()
