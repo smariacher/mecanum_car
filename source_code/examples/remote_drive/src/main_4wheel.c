@@ -127,15 +127,6 @@ void gpio_alt(GPIO_TypeDef *port, uint32_t pin, uint8_t alt_fn){
     port->AFR[idx] |= (alt_fn << pos);
 }
 
-/// @brief Initializes the enable pin for a given gpio port and pin number
-/// @param en_port 
-/// @param en_pin 
-void init_enable_pin(GPIO_TypeDef en_port, uint8_t en_pin){
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (2 * en_pin);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << en_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BS0 << en_pin;
-}
-
 /// @brief Initializes USART2
 /// @param  
 void USART2_Init(void){
@@ -190,6 +181,8 @@ void USART2_IRQHandler(void){
 
             if (receivedChar == '\r'){
                 rxBuffer[rxIndex] = '\0';
+
+                // if motor controll string is sent -> process it
                 if (rxIndex == 21){
                     // Motor controll code
                     // TODO: error handling
@@ -220,8 +213,15 @@ void USART2_IRQHandler(void){
                     driver3.req_speed = speed3;
                     driver4.req_speed = speed4;
                 }
+
+                // if emergency stop is sent
                 if (rxBuffer[0] == 'e'){
-                    
+                    disable_all_motors();
+                    driver1.cur_speed = 0;
+                    driver2.cur_speed = 0;
+                    driver3.cur_speed = 0;
+                    driver4.cur_speed = 0;
+                    LOG("Emergency stop called! Waiting for reset!\r\n")
                 }
                 rxIndex = 0;
 
@@ -269,28 +269,13 @@ void update_motors(tmc_controller *drivers[], int16_t acceleration){
 }
 
 /// @brief Initializes all direction pins
-void init_direction_pins(){
-    // TODO: use tmc_controller
+void init_direction_pins(tmc_controller *drivers[]){
     // Set direction pins accordingly
-    uint8_t dir_pin = 8;
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (dir_pin*2);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << dir_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BR0 << dir_pin;
-
-    dir_pin = 9;
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (dir_pin*2);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << dir_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BR0 << dir_pin;
-
-    dir_pin = 10;
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (dir_pin*2);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << dir_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BS0 << dir_pin;
-
-    dir_pin = 11;
-    GPIOD->MODER |= GPIO_MODER_MODER0_0 << (dir_pin*2);
-    GPIOD->OTYPER &= ~(GPIO_OTYPER_OT_0 << dir_pin);
-    GPIOD->BSRR |= GPIO_BSRR_BS0 << dir_pin;
+    for (int i = 0; i < 4; i++){
+        drivers[i]->dir_pin_port->MODER |= GPIO_MODER_MODER0_0 << (drivers[i]->dir_pin_number*2);
+        drivers[i]->dir_pin_port->OTYPER &= ~(GPIO_OTYPER_OT_0 << drivers[i]->dir_pin_number);
+        drivers[i]->dir_pin_port->BSRR |= GPIO_BSRR_BR0 << drivers[i]->dir_pin_number;
+    }
 }
 
 /// @brief Disables all motors - also callable from Interrupt
@@ -301,10 +286,14 @@ void disable_all_motors(){
     }
 }
 
+/// @brief Initializes all enable pins
+/// @param drivers tmc_controller array
 void init_enable_pins(tmc_controller *drivers[]){
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
     for (int i = 0; i < 4; i++){
-        init_enable_pin(*drivers[i]->en_pin_port, drivers[i]->en_pin_number);
+        drivers[i]->en_pin_port->MODER |= GPIO_MODER_MODER0_0 << (2 * drivers[i]->en_pin_number);
+        drivers[i]->en_pin_port->OTYPER &= ~(GPIO_OTYPER_OT_0 << drivers[i]->en_pin_number);
+        drivers[i]->en_pin_port->BSRR |= GPIO_BSRR_BS0 << drivers[i]->en_pin_number;
     }
 
     // Wait for motors to slow down after possible reset
@@ -315,6 +304,7 @@ void init_enable_pins(tmc_controller *drivers[]){
     }
 }
 
+/// @brief Initializes all timers
 void init_timers(){
     // Enable GPIOB port 6 and set to alt func 2 (TIM4_CH1)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
