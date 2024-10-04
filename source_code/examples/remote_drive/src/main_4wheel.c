@@ -420,7 +420,7 @@ int main(){
 
     init_enable_pins(&drivers);
     LOG("Enable pins initialized!\r\n");
-    init_direction_pins();
+    init_direction_pins(&drivers);
     LOG("Direction pins initialized!\r\n");
     init_timers();
     LOG("Timer initialized!\r\n");
