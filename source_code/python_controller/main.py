@@ -148,6 +148,9 @@ try:
         # draw_speed_arrows(offset + (wheel_width/2), offset + (wheel_height/2), wheel_speeds)
         # draw_direction(joystick)
         
+        if joystick.get_button(0):
+            ser.write('e\r'.encode())
+
         # # Update the display
         # pg.display.flip()
         multiplier = 30
