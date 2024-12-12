@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "clock_config.h": "c",
+        "main.h": "c",
+        "*.cold": "c",
+        "remote.h": "c"
+    }
+}
