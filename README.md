@@ -1,73 +1,79 @@
 Mecanum Car Project
 
-Dieses Repository enthält alle Dateien und Dokumentationen zum Mecanum Car, das über zwei Semester (4. und 5. Semester) im Rahmen des Bachelorstudiengangs Mechatronik Design & Innovation entwickelt wurde. Ziel des Projekts war die Konstruktion, Umsetzung und Erprobung eines funktionsfähigen Mecanum Cars, das sowohl mechanischen als auch elektronischen Anforderungen gerecht wird.
-Projektübersicht
+This repository contains all files and documentation related to the Mecanum Car, developed over two semesters (4th and 5th semester) as part of the Bachelor's degree program in Mechatronics Design & Innovation. The goal of the project was to design, implement, and test a fully functional Mecanum Car that meets both mechanical and electronic requirements.
+Project Overview
 
-Das Projektziel war die Entwicklung eines funktionalen Mecanum Cars mit omnidirektionaler Bewegungsfähigkeit. Der Fokus lag auf der mechanischen Konstruktion, der elektronischen Entwicklung und der Softwareintegration. Die Arbeit erstreckte sich über zwei Semester, um eine iterative Verbesserung und Erweiterung zu ermöglichen.
-Hauptmerkmale
+The project's objective was to develop a functional Mecanum Car with omnidirectional movement capabilities. The focus was on mechanical design, electronic development, and software integration. The work spanned two semesters to allow iterative improvement and extension.
+Key Features
+Mechanical Design
 
-    Mechanische Konstruktion:
-        Leichtes und stabiles Aluminiumchassis für hohe Belastbarkeit und Stabilität.
-        Schutzgehäuse für alle elektronischen Komponenten.
-        Verwendung von Mecanum-Rädern für omnidirektionale Bewegung.
-    Elektronisches System:
-        Spannungsversorgung über einen Makita-Akkuschrauberakku mit integriertem Spannungswandler.
-        Steuerung durch einen STM32F401VET6-Mikrocontroller mit ausreichend Reserven für zukünftige Erweiterungen.
-        Integration eines Gyro-Sensors (MPU6050) zur Erfassung von Beschleunigungsdaten.
-        Kommunikationsmodule (XBee, Infrarot-Empfänger) für zukünftige Fernsteuerungsoptionen.
-        Verkabelung der LEDs zur Beleuchtung vorne (weiß) und hinten (rot).
-    Software:
-        Steuerung mittels Xbox-Controller.
-        Debugging-Funktionen mit Hardware-Tasten.
-        Modular programmierte Grundfunktionen mit Erweiterungspotenzial.
-    Erweiterungen:
-        Design und Fertigung einer separaten Platine für einen Controller.
-        Installation eines Lüfters zur Kühlung der Platine und der Motor-Treiber.
-        Verkabelung und Montage von LEDs zur Fahrzeugbeleuchtung.
+    Lightweight and robust aluminum chassis for high durability and stability.
+    Protective housing for all electronic components.
+    Use of Mecanum wheels for omnidirectional movement.
 
-Repository-Inhalte
+Electronic System
 
-    Mechanische Designs: CAD-Dateien der Fahrzeugkomponenten (Grundplatte, Motorhalter, Stoßfänger, etc.).
-    Elektronik: Schaltpläne und PCB-Layouts, erstellt mit Altium Designer.
-    Firmware: Steuerungssoftware für das Mecanum Car, programmiert in C++ für den STM32-Mikrocontroller.
-    Dokumentation: Abschlussberichte, technische Spezifikationen und Benutzeranleitungen.
+    Power supply via a Makita power drill battery with an integrated voltage converter.
+    Control unit based on an STM32F401VET6 microcontroller, offering sufficient reserves for future expansions.
+    Integration of a gyro sensor (MPU6050) for acceleration data acquisition.
+    Communication modules (XBee, infrared receiver) for future remote control options.
+    Wiring of LEDs for front (white) and rear (red) lighting.
 
-Einstieg
-Voraussetzungen
+Software
 
-    Entwicklungsumgebung:
-        Altium Designer für das PCB-Design.
-        Visual Studio Code zur Firmware-Entwicklung.
+    Control via Xbox controller.
+    Debugging functionalities through hardware buttons.
+    Modular programming of basic functions with potential for further extension.
+
+Extensions
+
+    Design and production of a custom controller PCB.
+    Installation of a fan for cooling the PCB and motor drivers.
+    Wiring and mounting of LEDs for vehicle lighting.
+
+Repository Contents
+
+    Mechanical Designs: CAD files of vehicle components (base plate, motor mounts, bumpers, etc.).
+    Electronics: Schematics and PCB layouts created with Altium Designer.
+    Firmware: Control software for the Mecanum Car, written in C++ for the STM32 microcontroller.
+    Documentation: Final reports, technical specifications, and user manuals.
+
+Getting Started
+Prerequisites
+
+    Development Environment:
+        Altium Designer for PCB design.
+        Visual Studio Code for firmware development.
     Hardware:
-        Mecanum-Räder, Schrittmotoren, Makita-Akku, STM32-Mikrocontroller, Gyro-Sensor und diverse weitere Komponenten.
+        Mecanum wheels, stepper motors, Makita battery, STM32 microcontroller, gyro sensor, and other components.
 
 Installation
 
-    Klonen Sie das Repository:
+    Clone the repository:
 
     git clone https://github.com/smariacher/mecanum_car.git
 
-    Öffnen Sie die Projektdateien in den entsprechenden Software-Tools.
-    Kompilieren Sie die Firmware mit der STM32-Entwicklungsumgebung.
+    Open the project files in the corresponding software tools.
 
-Aktueller Status
+    Compile the firmware using the STM32 development environment.
 
-    Mechanik: Das Gehäuse wurde vollständig umgesetzt und funktioniert einwandfrei.
-    Elektronik: Die Platine und die Motorsteuerung sind vollständig funktional.
-    Software: Die grundlegenden Bewegungsfunktionen sind implementiert; fortgeschrittene Funktionen befinden sich in Arbeit.
+Current Status
 
-Zukünftige Arbeit
+    Mechanics: The chassis has been fully implemented and functions flawlessly.
+    Electronics: The PCB and motor control systems are fully operational.
+    Software: Basic motion functionalities have been implemented; advanced features are under development.
 
-    Optimierung der Motor-Treiber für bessere Leistung.
-    Integration eines Displays zur Darstellung von Sensordaten.
-    Erweiterung der Automatisierungs- und Steuerungsfunktionen.
+Future Work
 
-Mitwirkende
+    Optimization of motor drivers for improved performance.
+    Integration of a display for sensor data visualization.
+    Expansion of automation and control functionalities.
+
+Contributors
 
     Julian Fritzer
     Patrick Monthaler
     Simon Mariacher
-
 
 
 ## Source code
