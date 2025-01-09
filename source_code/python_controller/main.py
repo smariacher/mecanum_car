@@ -11,7 +11,7 @@ VISUAL_MODE = False
 pg.init()
 
 # Set up display
-screen_width, screen_height = 100, 100
+screen_width, screen_height = 300, 300
 screen = pg.display.set_mode((screen_width, screen_height))
 pg.display.set_caption("Robot Controller")
 
@@ -126,14 +126,14 @@ def get_wheel_speeds(input_source, is_joystick=True):
     speeds = [0,0,0,0]
     
     if is_joystick:
-        x = input_source.get_axis(0)*255
+        x = -input_source.get_axis(0)*255
         y = -input_source.get_axis(1)*255
         turn = input_source.get_axis(2)*255
     else:
         x, y, turn = input_source
-        x *= 350
-        y *= -350
-        turn *= 350
+        x *= 300
+        y *= 300
+        turn *= 300
 
     clamp_x = 20
     clamp_y = 20
@@ -153,6 +153,9 @@ def get_wheel_speeds(input_source, is_joystick=True):
     sin = math.sin(theta - math.pi/4)
     cos = math.cos(theta - math.pi/4)
     this_max = max(abs(sin), abs(cos))
+
+    if this_max == 0:
+        this_max = 0.1
 
     speeds[0] = power * cos/this_max + turn
     speeds[1] = power * sin/this_max - turn
@@ -201,7 +204,7 @@ if VISUAL_MODE:
         pg.quit()
 
 else:
-    ser = serial.Serial('COM20',
+    ser = serial.Serial('COM22',
                      9600,
                      bytesize=serial.EIGHTBITS,
                      stopbits=serial.STOPBITS_ONE,
@@ -212,6 +215,7 @@ else:
     time.sleep(2)
     try:
         while True:
+            
             # Handle events
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -225,8 +229,13 @@ else:
                     ser.write('e\r'.encode())
                 
                 if joystick.get_button(1):
-                    ser.write('l\r'.encode())
-                    print("toggled light!")
+                    ser.write('f\r'.encode())
+                    print("toggled front light!")
+                    time.sleep(0.1)
+                
+                if joystick.get_button(2):
+                    ser.write('b\r'.encode())
+                    print("toggled back light!")
                     time.sleep(0.1)
             else:
                 keyboard_input = get_keyboard_input()
@@ -256,7 +265,7 @@ else:
 
             ser.write(f'{send_speed1:05}{send_speed2:05}{send_speed3:05}{send_speed4:05}\r'.encode())
             print(f"{send_speed1:05}{send_speed2:05}{send_speed3:05}{send_speed4:05}")
-            time.sleep(.05)
+            time.sleep(.1)
 
     except KeyboardInterrupt:
         ser.write(f'00000000000000000000\r'.encode())

@@ -100,5 +100,7 @@ int main(void){
     
     while (1){
         // Main program loop
+        LOG("HELLO WORLD!");
+        delay(1000);
     }
 }

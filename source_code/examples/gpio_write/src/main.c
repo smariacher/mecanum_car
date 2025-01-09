@@ -8,22 +8,23 @@ int delay(uint32_t time){
 }
 
 int main(){
-    uint8_t gpio_pin = 10;
+    uint8_t gpio_pin = 2;
 
-    // Enable clock for GPIOC
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;    
+    // Enable clock for GPIOA
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;    
 
-    // Set GPIOC pin x as output
-    GPIOC->MODER |= GPIO_MODER_MODER0_0 << (2*gpio_pin);
+    // Set GPIOA pin x as output
+    GPIOA->MODER &= ~GPIO_MODER_MODER0_Msk;
+    GPIOA->MODER = GPIO_MODER_MODER0_0 << (2*gpio_pin);
 
-    // Set GPIOC pin x as push-pull output
-    GPIOC->OTYPER &= ~(GPIO_OTYPER_OT_0 << gpio_pin);
+    // Set GPIOA pin x as push-pull output
+    GPIOA->OTYPER &= ~(GPIO_OTYPER_OT_0 << gpio_pin);
 
     for (;;){
-        GPIOC->BSRR |= GPIO_BSRR_BS0 << gpio_pin;
-        delay(500000);
-        GPIOC->BSRR |= GPIO_BSRR_BR0 << gpio_pin;
-        delay(500000);
+        GPIOA->BSRR |= GPIO_BSRR_BS0 << gpio_pin;
+        delay(100);
+        GPIOA->BSRR |= GPIO_BSRR_BR0 << gpio_pin;
+        delay(100);
     }
     return 0;
 }

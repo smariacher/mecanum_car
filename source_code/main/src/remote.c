@@ -80,7 +80,7 @@ void USART2_IRQHandler(void){
                     int16_t speed3 = string_to_int16(string3);
                     int16_t speed4 = string_to_int16(string4);
 
-                    LOG("Speed1=%d, Speed2=%d, Speed3=%d, Speed4=%d\r\n", speed1, speed2, speed3, speed4);
+                    //LOG("Speed1=%d, Speed2=%d, Speed3=%d, Speed4=%d\r\n", speed1, speed2, speed3, speed4);
 
                     driver1.req_speed = speed1;
                     driver2.req_speed = speed2;
@@ -95,7 +95,7 @@ void USART2_IRQHandler(void){
                     driver2.cur_speed = 0;
                     driver3.cur_speed = 0;
                     driver4.cur_speed = 0;
-                    LOG("Emergency stop called! Waiting for reset!\r\n")
+                    //LOG("Emergency stop called! Waiting for reset!\r\n")
                 }
 
                 // if light command sent

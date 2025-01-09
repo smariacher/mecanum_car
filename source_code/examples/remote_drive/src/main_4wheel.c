@@ -40,6 +40,9 @@ tmc_controller driver2;
 tmc_controller driver3;
 tmc_controller driver4;
 
+uint8_t light_state_front = 0;
+uint8_t light_state_back = 0;
+
 /// @brief Very easy function to delay code execution
 /// @param time amount of nop instructions being executed
 /// @return 0 after time ran out
@@ -223,6 +226,27 @@ void USART2_IRQHandler(void){
                     driver4.cur_speed = 0;
                     LOG("Emergency stop called! Waiting for reset!\r\n")
                 }
+
+                // if light command sent
+                if (rxBuffer[0] == 'f'){
+                    if (light_state_front){
+                        TIM2->CCR3 = 0;
+                        light_state_front = 0;
+                    } else {
+                        TIM2->CCR3 = TIM2->ARR;
+                        light_state_front = 1;
+                    }
+                }
+
+                if (rxBuffer[0] == 'b'){
+                    if (light_state_back){
+                        TIM2->CCR2 = 0;
+                        light_state_back = 0;
+                    } else {
+                        TIM2->CCR2 = TIM2->ARR;
+                        light_state_back = 1;
+                    }
+                }
                 rxIndex = 0;
 
             }
@@ -253,19 +277,19 @@ void update_motors(tmc_controller *drivers[], int16_t acceleration){
         }
     }
 
-    TIM1->ARR = arr_from_freq(abs(driver1.cur_speed), TIM1);
-    TIM1->CCR1 = arr_from_freq(abs(driver1.cur_speed), TIM1) / 2;
+    TIM1->ARR = arr_from_freq(abs(driver1.cur_speed), TIM1) * 2;
+    TIM1->CCR1 = arr_from_freq(abs(driver1.cur_speed), TIM1);
 
     // TODO: Reevaluate this calculation
-    TIM9->ARR = arr_from_freq(abs(driver2.cur_speed), TIM9) * 2;
+    TIM9->ARR = arr_from_freq(abs(driver2.cur_speed), TIM9) * 4;
     TIM9->CCR1 = arr_from_freq(abs(driver2.cur_speed), TIM9);
     
 
-    TIM4->ARR = arr_from_freq(abs(driver3.cur_speed), TIM4);
-    TIM4->CCR1 = arr_from_freq(abs(driver3.cur_speed), TIM4) / 2;
+    TIM4->ARR = arr_from_freq(abs(driver3.cur_speed), TIM4) * 2;
+    TIM4->CCR1 = arr_from_freq(abs(driver3.cur_speed), TIM4);
 
-    TIM3->ARR = arr_from_freq(abs(driver4.cur_speed), TIM3);
-    TIM3->CCR1 = arr_from_freq(abs(driver4.cur_speed), TIM3) / 2;
+    TIM3->ARR = arr_from_freq(abs(driver4.cur_speed), TIM3) * 2;
+    TIM3->CCR1 = arr_from_freq(abs(driver4.cur_speed), TIM3);
 }
 
 /// @brief Initializes all direction pins
@@ -313,15 +337,22 @@ void init_timers(){
     // Enable GPIOB port 4 and set to alt func 2
     gpio_alt(GPIOB, 4, 2);
 
-    // Enable GPIOA port 0 and set to alt func 2
+    // Enable GPIOA port 8 and set to alt func 1
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     gpio_alt(GPIOA, 8, 1);
     GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR8_1;
     GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD8_Msk;
 
-    // Enable GPIOE port 4 and set to alt func 2
+    // Enable GPIOE port 5 and set to alt func 3
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
     gpio_alt(GPIOE, 5, 3);
+
+    // Enable GPIOB port 3 and set to alt func 1 for back light
+    gpio_alt(GPIOB, 3, 1);
+
+    // Enable GPIOB port 10 and set to alt func 1 for front light
+    gpio_alt(GPIOB, 10, 1);
+
 
     // Enable TIM4 peripheral
     RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
@@ -335,6 +366,9 @@ void init_timers(){
     // Enable TIM9 peripherals
     RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;
 
+    // Enable TIM2 peripherals
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+
     // Buffer the ARR register
     TIM4->CR1 |= TIM_CR1_ARPE;
 
@@ -344,6 +378,13 @@ void init_timers(){
     TIM1->CR2 = 0;
 
     TIM9->CR1 |= TIM_CR1_ARPE;
+
+    TIM2->CR1 |= 0;
+    TIM2->CCER = 0;
+    TIM2->CR1 |= TIM_CR1_ARPE;
+
+    GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED3_Msk;
+    GPIOB->OTYPER &= ~GPIO_OTYPER_OT3;
 
     // Set the prescaler and overflow values
     TIM4->PSC = 3;
@@ -362,6 +403,9 @@ void init_timers(){
     TIM9->ARR = 64000-1;
     TIM9->CCR1 = 0;
 
+    TIM2->PSC = 0;
+    TIM2->ARR = arr_from_freq(4000, TIM2);
+
     TIM4->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
 
     TIM3->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
@@ -370,6 +414,16 @@ void init_timers(){
     TIM1->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
 
     TIM9->CCMR1 |= (TIM_CCMR1_OC1PE | (0b110 << TIM_CCMR1_OC1M_Pos));
+
+    TIM2->CCMR1 &= ~(TIM_CCMR1_OC2M_Msk);  // Clear mode bits
+    TIM2->CCMR1 |= (0b110 << TIM_CCMR1_OC2M_Pos);  // PWM mode 1
+    TIM2->CCMR1 |= TIM_CCMR1_OC2PE;  // Enable preload
+    TIM2->CCR2 = 0;
+
+    TIM2->CCMR2 &= ~(TIM_CCMR2_OC3M);
+    TIM2->CCMR2 |= (0b110 << TIM_CCMR2_OC3M_Pos);
+    TIM2->CCMR2 |= TIM_CCMR2_OC3PE;
+    TIM2->CCR3 = 0;
 
     // Enable Capture Compare for channel 1
     TIM4->CCER |= TIM_CCER_CC1E;
@@ -380,6 +434,11 @@ void init_timers(){
 
     TIM9->CCER |= TIM_CCER_CC1E;
 
+    // Enable Capture Compare for channel 2,3
+    TIM2->CCER |= TIM_CCER_CC2E;
+    TIM2->CCER |= TIM_CCER_CC3E;
+    TIM2->EGR |= TIM_EGR_UG;
+
     // Enable the timer and set to center-aligned mode
     TIM4->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 
@@ -388,6 +447,8 @@ void init_timers(){
     TIM1->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 
     TIM9->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
+
+    TIM2->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 }
 
 int main(){

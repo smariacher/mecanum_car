@@ -83,11 +83,11 @@ int main(){
         init_enable_pin(*drivers[i].en_pin_port, drivers[i].en_pin_number);
     }
 
-    delay(1000000);
-    for (int i = 0; i < 4; i++){
+    // delay(1000000);
+    // for (int i = 0; i < 4; i++){
 
-        drivers[i].en_pin_port->BSRR |= GPIO_BSRR_BR0 << drivers[i].en_pin_number;
-    }
+    //     drivers[i].en_pin_port->BSRR |= GPIO_BSRR_BR0 << drivers[i].en_pin_number;
+    // }
 
     // Set direction pins accordingly
     uint8_t dir_pin = 8;
